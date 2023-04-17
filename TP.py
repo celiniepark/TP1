@@ -16,7 +16,6 @@ class Sun:
         self.sunSpawnY += 10
     def pickUp(self, sunlight, newSun):
         self.sunlight += 25
-
 #zombie class   
 class Zombie:
     def __init__(self, speed):
@@ -74,6 +73,10 @@ def onAppStart(app):
     app.zombie = Zombie(5)
     # app.coneZombie = openImage()
 
+def distance(x1, y1, x2, y2):
+    n = math.sqrt(abs((x1 - x2)**2 + (y1 - y2)**2))
+    return n
+
 def gameStart(app):
     app.gameStart = True
     app.wave = 1
@@ -88,9 +91,11 @@ def onStep(app):
         app.timeUntilSun -= 1
     elif app.timeUntilSun == 0:
         app.timeUntilSun = 50
-    # for sun in range(len(app.sunList)):
-    #     if app.timeUntilSun % 20 == 0:
-    #         app.sunList[sun].sunSpawnY += 10
+    for sun in range(len(app.sunList)):
+        existingSun(app.sunList[sun])
+    if app.timeUntilSun % 20 == 0:
+        existingSun.sunSpawnY += 10
+
 def redrawAll(app):
     if app.onTitle == True:
         drawImage(app.titleImage, 0, 0, width=app.titleImageWidth, height=app.titleImageHeight)
@@ -173,7 +178,6 @@ def onMousePress(app, mouseX, mouseY):
         app.sunList = []
     elif app.onMenu == True and mouseX<300 or mouseX>700 or mouseY<200 or mouseY>400:
         app.onMenu = False
-    #if app.onBackground == True:
 
 def onKeyPress(app, key):
     if key == 'd':
