@@ -91,10 +91,10 @@ def onStep(app):
         app.timeUntilSun -= 1
     elif app.timeUntilSun == 0:
         app.timeUntilSun = 50
-    for sun in range(len(app.sunList)):
-        existingSun(app.sunList[sun])
-    if app.timeUntilSun % 20 == 0:
-        existingSun.sunSpawnY += 10
+    # for sun in range(len(app.sunList)):
+    #     existingSun(app.sunList[sun])
+    # if app.timeUntilSun % 20 == 0:
+    #     existingSun.sunSpawnY += 10
 
 def redrawAll(app):
     if app.onTitle == True:
