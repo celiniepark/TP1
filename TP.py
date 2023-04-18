@@ -16,12 +16,26 @@ class Sun:
         self.sunSpawnY += 10
     def pickUp(self, sunlight, newSun):
         self.sunlight += 25
+    
+class Seed:
+    def __init__(self):
+        self.width = 230 // 2.5
+        self.height = 150 // 2.5
+
 #zombie class   
 class Zombie:
     def __init__(self, speed):
         self.speed = speed
-        # self.zWidth = width
-        # self.zHeight = height
+        zombGif = Image.open('gifs/pvz_normZombie.gif')
+        self.spriteList = []
+        for frame in range(zombGif.n_frames):  #For every frame index...
+            zombGif.seek(frame)
+            fr = zombGif.resize((zombGif.size[0]//2, zombGif.size[1]//2))
+            fr = CMUImage(fr)
+            self.spriteList.append(fr)
+        self.stepCounter = 0
+        self.spriteCounter = 0
+        self.spriteList.pop(0)
     
 class Norm(Zombie):
     def __init__(self, speed):
@@ -41,7 +55,7 @@ def onAppStart(app):
     app.height = 600
     app.cx = app.width/2
     app.cy = app.height/2
-    app.timeUntilSun = 50
+    app.timeUntilSun = 30
     # -------screens-------
     # title screen
     app.titleImage = openImage("../pvz_title.png")
@@ -59,19 +73,35 @@ def onAppStart(app):
     # start screen
     app.gameStart = False
     app.wave = 1
+
+    app.stepsPerSecond = 100
+
     # menu screen
     app.onMenu = False
+    # -------seeds-------
+    # sunflower
+    app.sunflowerSeed = openImage('../sunflower_seed.png')
+    app.sunflowerSeedImg = CMUImage(app.sunflowerSeed)
+    app.sunflowerSeed = Seed()
+    # peashooter
+    app.peashooterSeed = openImage('../peashooter_seed.png')
+    app.peashooterSeedImg = CMUImage(app.peashooterSeed)
+    app.peashooterSeed = Seed()
+    # wallnut
+    app.wallnutSeed = openImage('../wallnut_seed.png')
+    app.wallnutSeedImg = CMUImage(app.wallnutSeed)
+    app.wallnutSeed = Seed()
+    # -------zombie-------
+    app.zombie = openImage('../normZomb.png')
+    app.zombieImg = CMUImage(app.zombie)
+    app.zombWidth, app.zombHeight = 70, 120
+    app.zombie = Zombie(5)
+
     # sun
     app.sun = openImage('../pvz_sun.png')
     app.sunImg = CMUImage(app.sun)
     app.sun = Sun(75,0,40)
     app.sunList = []
-
-    app.zombie = openImage('../normZomb.png')
-    app.zombieImg = CMUImage(app.zombie)
-    app.zombWidth, app.zombHeight = 70, 120
-    app.zombie = Zombie(5)
-    # app.coneZombie = openImage()
 
 def distance(x1, y1, x2, y2):
     n = math.sqrt(abs((x1 - x2)**2 + (y1 - y2)**2))
@@ -90,11 +120,14 @@ def onStep(app):
     if app.onBackground == True and app.timeUntilSun > 0:
         app.timeUntilSun -= 1
     elif app.timeUntilSun == 0:
-        app.timeUntilSun = 50
-    # for sun in range(len(app.sunList)):
-    #     existingSun(app.sunList[sun])
-    # if app.timeUntilSun % 20 == 0:
-    #     existingSun.sunSpawnY += 10
+        app.timeUntilSun = 30
+    for sun in app.sunList:
+        sun.sunSpawnY += 1
+    if app.onBackground == True:
+        app.zombie.stepCounter += 1
+        if app.zombie.stepCounter >= 3:
+            app.zombie.spriteCounter = (app.zombie.spriteCounter + 1) % len(app.zombie.spriteList)
+            app.zombie.stepCounter = 0
 
 def redrawAll(app):
     if app.onTitle == True:
@@ -122,7 +155,7 @@ def redrawAll(app):
         drawLabel(f'Press "B" to return to the title screen!', 500, 570, size=15, fill='darkRed')
     elif app.onBackground == True:
         drawImage(app.bgImage, 0, 0, width=app.bgImageWidth, height=app.bgImageHeight)
-        drawImage(app.zombieImg, 970, 120, width=app.zombWidth, height=app.zombHeight)
+        drawImage(app.zombie.spriteList[app.zombie.spriteCounter], 960, 120, width=app.zombWidth, height=app.zombHeight)
         drawLabel(f'Wave {app.wave}', 500, 570, size=15, fill='darkRed')
         # shelf
         drawRect(0, 0, 120, 400, fill='sienna',  border='black', borderWidth=2)
@@ -131,6 +164,10 @@ def redrawAll(app):
         drawImage(app.sunImg, 60, 40, width=app.sun.sunWidth, height=app.sun.sunHeight, align='center')
         drawRect(60, 85, 70, 20, fill='blanchedAlmond', border='black', borderWidth=1, align='center')
         drawLabel(f'{app.startingSun}', 60, 85, size=14, fill = 'black')
+        # seeds
+        drawImage(app.sunflowerSeedImg, 60, 145, width=app.sunflowerSeed.width, height=app.sunflowerSeed.height, align = 'center')
+        drawImage(app.peashooterSeedImg, 60, 210, width=app.sunflowerSeed.width, height=app.sunflowerSeed.height, align = 'center')
+        drawImage(app.wallnutSeedImg, 60, 275, width=app.sunflowerSeed.width, height=app.sunflowerSeed.height, align = 'center')
         # menu
         drawRect(880, 550, 100, 40, fill='sienna', border='black', borderWidth=2)
         drawLabel('Menu', 930, 570, size=15, fill='cornSilk')
@@ -139,8 +176,10 @@ def redrawAll(app):
             randomX = randrange(240,950)
             sunNew = Sun(75,randomX, 40)
             app.sunList.append(sunNew)
-        for sun in range(len(app.sunList)):
-            drawImage(app.sunImg, app.sunList[sun].sunSpawnX, app.sun.sunSpawnY, width=app.sun.sunWidth, height=app.sun.sunHeight, align='center')
+        # for sun in range(len(app.sunList)):
+        #     drawImage(app.sunImg, app.sunList[sun].sunSpawnX, app.sunList[sun].sunSpawnY, width=app.sun.sunWidth, height=app.sun.sunHeight, align='center')
+        for sun in app.sunList:
+            drawImage(app.sunImg, sun.sunSpawnX, sun.sunSpawnY, width=sun.sunWidth, height=sun.sunHeight, align='center')
 
     if app.onMenu == True:
         drawRect(app.cx, app.cy, 400, 200, fill='peru', border='black', borderWidth=1, align='center')
