@@ -3,19 +3,17 @@ import math, copy
 from PIL import Image
 import os, pathlib
 import random
-# not  sure how exactly to "cite" but I referenced parts of the cmugraphicsdemos
+# cmugraphicsdemos: basicPILMethods.py, kirbleBirdStarter.py
+# CS Academy: distance function, 5.3.4 Tic Tac Toe
 # https://ernestoam.fandom.com/wiki/Category:Plants_vs._Zombies_2
 
 class Sun:
-    def __init__(self, sunlight, x, y):
-        self.sunlight = sunlight
+    def __init__(self, x, y):
         self.sunWidth, self.sunHeight = 35, 35
         self.sunSpawnX = x
         self.sunSpawnY = y
     def sunFall(self, sunSpawnY):
         self.sunSpawnY += 10
-    def pickUp(self, sunlight, newSun):
-        self.sunlight += 25
     
 class Seed:
     def __init__(self):
@@ -28,7 +26,7 @@ class Zombie:
         self.speed = speed
         zombGif = Image.open('gifs/pvz_normZombie.gif')
         self.spriteList = []
-        for frame in range(zombGif.n_frames):  #For every frame index...
+        for frame in range(zombGif.n_frames): 
             zombGif.seek(frame)
             fr = zombGif.resize((zombGif.size[0]//2, zombGif.size[1]//2))
             fr = CMUImage(fr)
@@ -73,7 +71,6 @@ def onAppStart(app):
     # start screen
     app.gameStart = False
     app.wave = 1
-
     app.stepsPerSecond = 100
 
     # menu screen
@@ -97,10 +94,11 @@ def onAppStart(app):
     app.zombWidth, app.zombHeight = 70, 120
     app.zombie = Zombie(5)
 
-    # sun
+    # -------sun-------
     app.sun = openImage('../pvz_sun.png')
     app.sunImg = CMUImage(app.sun)
-    app.sun = Sun(75,0,40)
+    app.sun = Sun(0,40)
+    app.startingSun = 75
     app.sunList = []
 
 def distance(x1, y1, x2, y2):
@@ -110,7 +108,6 @@ def distance(x1, y1, x2, y2):
 def gameStart(app):
     app.gameStart = True
     app.wave = 1
-    app.startingSun = 75
     app.sunList = []
 def openImage(fileName):
    return Image.open(os.path.join(pathlib.Path(__file__).parent,fileName))
@@ -139,7 +136,7 @@ def redrawAll(app):
         drawLabel("1. Don't let the zombies reach your house!", 500, 100, size=20, fill='cornSilk')
         drawLabel("2. Use plants to damage and block the zombies!", 500, 150, size=20, fill='cornSilk')
         drawLabel("3. You need sunlight to buy plants!", 500, 200, size=20, fill='cornSilk')
-        drawLabel("3. Use Wall-Nuts as a defensive shield!", 500, 250, size=20, fill='cornSilk')
+        drawLabel("4. Use Wall-Nuts as a defensive shield!", 500, 250, size=20, fill='cornSilk')
         drawLabel('Press "B" to return to the title screen', 500, 550, size=20, fill='cornSilk')
     elif app.gameStart == True:
         drawImage(app.bgImage, 0, 0, width=app.bgImageWidth, height=app.bgImageHeight)
@@ -166,18 +163,22 @@ def redrawAll(app):
         drawLabel(f'{app.startingSun}', 60, 85, size=14, fill = 'black')
         # seeds
         drawImage(app.sunflowerSeedImg, 60, 145, width=app.sunflowerSeed.width, height=app.sunflowerSeed.height, align = 'center')
-        drawImage(app.peashooterSeedImg, 60, 210, width=app.sunflowerSeed.width, height=app.sunflowerSeed.height, align = 'center')
-        drawImage(app.wallnutSeedImg, 60, 275, width=app.sunflowerSeed.width, height=app.sunflowerSeed.height, align = 'center')
+        drawRect(60, 190, 70, 20, fill='blanchedAlmond', border='black', borderWidth=1, align='center')
+        drawLabel('50', 60, 190, size=14, fill = 'black')
+        drawImage(app.peashooterSeedImg, 60, 240, width=app.sunflowerSeed.width, height=app.sunflowerSeed.height, align = 'center')
+        drawRect(60, 285, 70, 20, fill='blanchedAlmond', border='black', borderWidth=1, align='center')
+        drawLabel('100', 60, 285, size=14, fill = 'black')
+        drawImage(app.wallnutSeedImg, 60, 335, width=app.sunflowerSeed.width, height=app.sunflowerSeed.height, align = 'center')
+        drawRect(60, 380, 70, 20, fill='blanchedAlmond', border='black', borderWidth=1, align='center')
+        drawLabel('100', 60, 380, size=14, fill = 'black')
         # menu
         drawRect(880, 550, 100, 40, fill='sienna', border='black', borderWidth=2)
         drawLabel('Menu', 930, 570, size=15, fill='cornSilk')
         # sun
         if app.timeUntilSun == 0:
             randomX = randrange(240,950)
-            sunNew = Sun(75,randomX, 40)
+            sunNew = Sun(randomX, 40)
             app.sunList.append(sunNew)
-        # for sun in range(len(app.sunList)):
-        #     drawImage(app.sunImg, app.sunList[sun].sunSpawnX, app.sunList[sun].sunSpawnY, width=app.sun.sunWidth, height=app.sun.sunHeight, align='center')
         for sun in app.sunList:
             drawImage(app.sunImg, sun.sunSpawnX, sun.sunSpawnY, width=sun.sunWidth, height=sun.sunHeight, align='center')
 
@@ -217,6 +218,11 @@ def onMousePress(app, mouseX, mouseY):
         app.sunList = []
     elif app.onMenu == True and mouseX<300 or mouseX>700 or mouseY<200 or mouseY>400:
         app.onMenu = False
+    # pick up sun
+    for sun in app.sunList:
+        if distance(sun.sunSpawnX, sun.sunSpawnY, mouseX, mouseY) < 17.5:
+            app.sunList.remove(sun)
+            app.startingSun += 25
 
 def onKeyPress(app, key):
     if key == 'd':
@@ -228,4 +234,5 @@ def onKeyPress(app, key):
     elif app.gameStart == True and key == 'b':
         app.onTitle = True
 
+# def findSlot(app, mouseX, mouseY)
 runApp()
